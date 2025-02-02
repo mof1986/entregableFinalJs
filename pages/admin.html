@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <script defer src="../js/admin.js"></script>
     <meta charset="UTF-8">
@@ -55,6 +55,19 @@
                     <label for="product-category" class="form-label">Categoría</label>
                     <input type="text" id="product-category" class="form-control" placeholder="Categoría" required>
                 </div>
+
+                <!-- 🔹 Nuevo campo para cargar imágenes -->
+                <div class="col-md-6">
+                    <label for="product-image" class="form-label">Imagen del producto</label>
+                    <input type="file" class="form-control" id="product-image" accept="image/png, image/jpeg">
+                </div>
+
+                <!-- 🔹 Previsualización de imagen cargada -->
+                <div class="col-md-6 text-center">
+                    <p>Previsualización:</p>
+                    <img id="image-preview" src="../images/default.png" class="img-thumbnail" style="max-width: 150px; height: auto;">
+                </div>
+
                 <div class="col-12">
                     <button type="submit" class="btn btn-success">Guardar Producto</button>
                     <button type="button" class="btn btn-secondary" id="clear-form">Limpiar</button>

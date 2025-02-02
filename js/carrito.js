@@ -1,20 +1,20 @@
-// Funcion para carga de datos desde LocalStorage
+// Función para carga de datos desde LocalStorage
 const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 const productos = JSON.parse(localStorage.getItem("productos")) || [];
 
-// Funcion para guardado de datos en LocalStorage
+// Función para guardado de datos en LocalStorage
 function guardarDatos() {
     localStorage.setItem("carrito", JSON.stringify(carrito));
     localStorage.setItem("productos", JSON.stringify(productos));
 }
 
-// Funcion para renderizar productos del carrito
+// Función para renderizar productos del carrito con imágenes
 function renderizarCarrito() {
     const carritoList = document.getElementById("carrito-list");
     const carritoTotales = document.getElementById("carrito-totales");
-    
+
     // Limpiamos contenedores y totales
-    carritoList.innerHTML = ""; 
+    carritoList.innerHTML = "";
     carritoTotales.innerHTML = "";
 
     // Mostramos texto de carrito vacío previa comprobación
@@ -29,16 +29,26 @@ function renderizarCarrito() {
     carrito.forEach(item => {
         const subtotal = item.cantidad * item.precio;
         totalCompra += subtotal;
-        
-        // Mostramos productos del carrito con plantillas literales
+
+        // Buscamos el producto en la lista original para obtener su imagen
+        const producto = productos.find(p => p.id === item.id);
+        const imagenURL = producto && producto.imagen ? producto.imagen : "../images/default.png"; // Si no hay imagen, usa una por defecto
+
+        // Mostramos productos del carrito con imagen y botones para modificar cantidad
         carritoList.innerHTML += `
             <div class="col-md-12 mb-3">
-                <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
-                    <div>
+                <div class="d-flex align-items-center border-bottom pb-2">
+                    <img src="${imagenURL}" alt="${item.nombre}" class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                    <div class="flex-grow-1">
                         <h5>${item.nombre}</h5>
                         <p>${item.cantidad} x $${item.precio} = $${subtotal}</p>
+                        <div>
+                            <button class="btn btn-danger btn-sm" onclick="actualizarCantidadCarrito(${item.id}, -1)">-</button>
+                            <span id="cantidad-carrito-${item.id}" class="mx-2">${item.cantidad}</span>
+                            <button class="btn btn-success btn-sm" onclick="actualizarCantidadCarrito(${item.id}, 1)">+</button>
+                        </div>
                     </div>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${item.id})">Eliminar</button>
+                    <button class="btn btn-danger btn-sm ms-3" onclick="confirmarEliminarProducto(${item.id})">Eliminar</button>
                 </div>
             </div>
         `;
@@ -47,41 +57,76 @@ function renderizarCarrito() {
     carritoTotales.innerHTML = `
         <h4>Total: $${totalCompra}</h4>
         <button class="btn btn-success me-2" onclick="pagar()">Pagar</button>
-        <button class="btn btn-danger" onclick="limpiarCarrito()">Limpiar Carrito</button>
+        <button class="btn btn-danger" onclick="confirmarLimpiarCarrito()">Limpiar Carrito</button>
     `;
 }
 
-// Funcion para eliminar un producto del carrito
-function eliminarDelCarrito(id) {
-    const nuevoCarrito = []; // Creamos un nuevo array
-    carrito.forEach(item => {
-        if (item.id !== id) {
-            nuevoCarrito.push(item); // Agregamos los productos que no coincidan con el ID
+// Función para actualizar cantidad en el carrito
+function actualizarCantidadCarrito(id, cambio) {
+    const item = carrito.find(p => p.id === id);
+    if (!item) return;
+
+    const producto = productos.find(p => p.id === id);
+    if (!producto) return;
+
+    let nuevaCantidad = item.cantidad + cambio;
+
+    // Validar stock y cantidad mínima
+    if (nuevaCantidad > producto.stock) return;
+    if (nuevaCantidad < 1) {
+        if (confirm("¿Deseas eliminar este producto del carrito?")) {
+            eliminarDelCarrito(id);
+            return;
         } else {
-            // Si coincide, devolvemos el stock al inventario
-            const producto = productos.find(p => p.id === id);
-            if (producto) {
-                producto.stock += item.cantidad;
-            }
+            return;
         }
-    });
-    // Reasigno carrito con el nuevo array
-    carrito.length = 0; // Vacio el array actual y lleno con los elementos restantes
-    nuevoCarrito.forEach(item => carrito.push(item));
-    
+    }
+
+    item.cantidad = nuevaCantidad;
+    document.getElementById(`cantidad-carrito-${id}`).textContent = nuevaCantidad;
     guardarDatos();
     renderizarCarrito();
 }
 
-// Funcion para limpiar el carrito
+// Función para confirmar eliminación de un producto
+function confirmarEliminarProducto(id) {
+    if (confirm("¿Estás seguro de que deseas eliminar este producto del carrito?")) {
+        eliminarDelCarrito(id);
+    }
+}
+
+// Función para eliminar un producto del carrito
+function eliminarDelCarrito(id) {
+    carrito.forEach((item, index) => {
+        if (item.id === id) {
+            const producto = productos.find(p => p.id === id);
+            if (producto) {
+                producto.stock += item.cantidad; // Devolvemos stock al inventario
+            }
+            carrito.splice(index, 1);
+        }
+    });
+
+    guardarDatos();
+    renderizarCarrito();
+}
+
+// Función para confirmar limpieza del carrito
+function confirmarLimpiarCarrito() {
+    if (confirm("¿Estás seguro de que deseas vaciar el carrito? Esta acción no se puede deshacer.")) {
+        limpiarCarrito();
+    }
+}
+
+// Función para limpiar el carrito
 function limpiarCarrito() {
     carrito.forEach(item => {
         const producto = productos.find(p => p.id === item.id);
         if (producto) {
-            producto.stock += item.cantidad; // Devolvemos stock al inventario
+            producto.stock += item.cantidad;
         }
     });
-    carrito.length = 0; // Vaciar el carrito
+    carrito.length = 0;
     guardarDatos();
     renderizarCarrito();
 }
@@ -91,7 +136,5 @@ function pagar() {
     alert("La funcionalidad de pago aún no está implementada.");
 }
 
-// Inicializar
-document.addEventListener("DOMContentLoaded", () => {
-    renderizarCarrito();
-});
+// Inicializar renderizado del carrito
+renderizarCarrito();

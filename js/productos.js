@@ -1,44 +1,63 @@
-// Productos disponibles, segun esten cargados o unos . POdria ver de cargar un boton que lleve a una funcion que cargue una lista inicial de productos para evitar que aparezca 
-// vacia si el usr va directo a admin. PENDIENTE
-//Otro pendiente es al agregar un producto desde admin, no queda bien el id. PENDIENTE.
-const productos = JSON.parse(localStorage.getItem("productos")) || [
-    { id: 1, nombre: "Cemento", descripcion: "Marca: Hercal. Cantidad: Bolsa 50kg ", precio: 500, stock: 10, categoria: "Materiales de Construcción" },
-    { id: 2, nombre: "Arena", descripcion: "Tipo: Fina. Cantidad: Metro cúbico", precio: 300, stock: 5, categoria: "Materiales de Construcción" },
-    { id: 3, nombre: "Ladrillos", descripcion: "Tipo: Horno tradicional. Cantidad: Unidad", precio: 800, stock: 20, categoria: "Materiales de Construcción" }
-];
+// Productos (carga desde JSON)
+let productos = [];
+let carrito = JSON.parse(localStorage.getItem("carrito")) || []; // Cargar carrito si existe
 
-// cargo info de carrito, sea vacio o ya con elementos cargados previamente.
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+// Cargar productos de JSON de manera asincrónica
+async function cargarProductos() {
+    try {
+        //console.log("Intentando cargar productos..."); // Debug
+        const response = await fetch("../db/productos.json");
 
-// Cantidades seleccionadas por usr
-const cantidadesSeleccionadas = {};
+        if (!response.ok) {
+            throw new Error("Error al cargar los productos.");
+        }
 
-// Guardo datos ('productos´y 'carrito') en LocalStorage
-function guardarDatos() {
-    localStorage.setItem("productos", JSON.stringify(productos));
-    localStorage.setItem("carrito", JSON.stringify(carrito));
+        productos = await response.json();
+        localStorage.setItem("productos", JSON.stringify(productos)); // Guardamos en LocalStorage
+        //console.log("Productos cargados con éxito:", productos); // Debug
+        renderizarProductos();
+
+    } catch (error) {
+        console.error("Error:", error.message);
+        alert("Hubo un problema al cargar los productos. Inténtalo nuevamente.");
+        productos = []; // Vaciar productos en caso de error
+    }
 }
 
-// Renderizo productos
+// Inicializar carga de productos desde LocalStorage o JSON
+function inicializarProductos() {
+    const productosGuardados = localStorage.getItem("productos");
+
+    if (productosGuardados) {
+        productos = JSON.parse(productosGuardados);
+        renderizarProductos();
+    } else {
+        cargarProductos();
+    }
+}
+
+// Renderizar productos en la pantalla
 function renderizarProductos() {
     const productosList = document.getElementById("productos-list");
-    productosList.innerHTML = ""; // Limpio (para refrescar), sino se acumula
-    productos.filter(producto => producto.stock > 0).forEach(producto => { // Uso un array temporal filtrado con stock(>0) y luego aplico metodo p sync con el carrito: si el producto está en el carrito, uso su cantidad. Uso metodos en misma linea para eficiencia memoria y lineas.
-        const itemEnCarrito = carrito.find(item => item.id === producto.id);
-        cantidadesSeleccionadas[producto.id] = itemEnCarrito ? itemEnCarrito.cantidad : 0; //si no está en carrito, uso 0 ya que sino devuelde undefined
+    productosList.innerHTML = "";
 
-        productosList.innerHTML += //agrego (concateno) los elementos al codigo asegurando el render de todos los objetos segun condiciones.
-            `<div class="col-md-4 mb-3">
+    productos.filter(producto => producto.stock > 0).forEach(producto => {
+        const itemEnCarrito = carrito.find(item => item.id === producto.id);
+        const cantidad = itemEnCarrito ? itemEnCarrito.cantidad : 0;
+
+        productosList.innerHTML += `
+            <div class="col-md-4 mb-3">
                 <div class="card">
+                    <img src="${producto.imagen}" class="card-img-top" alt="${producto.nombre}">
                     <div class="card-body">
                         <h5 class="card-title">${producto.nombre}</h5>
                         <p class="card-text">${producto.descripcion}</p>
                         <p class="card-text">Categoría: ${producto.categoria}</p>
                         <p class="card-text">Precio: $${producto.precio}</p>
-                        <p class="card-text">Cantidad seleccionada: <span id="cantidad-${producto.id}">${cantidadesSeleccionadas[producto.id]}</span></p> <!--Uso id unico del span para evitar conflictos con DOM-->
-                        <button class="btn btn-danger" onclick="actualizarCantidad(${producto.id}, -1)">-</button>
-                        <button class="btn btn-success" onclick="actualizarCantidad(${producto.id}, 1)">+</button>
-                        <button class="btn btn-primary mt-2" onclick="agregarAlCarrito(${producto.id})">Agregar al Carrito</button>
+                        <div id="acciones-${producto.id}">
+                            ${itemEnCarrito ? generarControlesCantidad(producto.id, cantidad) : 
+                            `<button class="btn btn-primary" onclick="activarControles(${producto.id})">Agregar al Carrito</button>`}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -46,45 +65,73 @@ function renderizarProductos() {
     });
 }
 
-// Actualizo cantidad seleccionada
+// Generar controles de cantidad para productos en la lista
+function generarControlesCantidad(id, cantidad) {
+    return `
+        <p class="card-text">Cantidad: <span id="cantidad-${id}">${cantidad}</span></p>
+        <button class="btn btn-danger" onclick="actualizarCantidad(${id}, -1)">-</button>
+        <button class="btn btn-success" onclick="actualizarCantidad(${id}, 1)">+</button>
+    `;
+}
+
+// Activar controles de cantidad al hacer clic en "Agregar al Carrito"
+function activarControles(id) {
+    const producto = productos.find(p => p.id === id);
+    if (!producto || producto.stock === 0) return;
+
+    // Reemplazar el botón con los controles de cantidad
+    document.getElementById(`acciones-${id}`).innerHTML = generarControlesCantidad(id, 1);
+
+    // Agregar automáticamente una unidad al carrito
+    actualizarCantidad(id, 1);
+}
+
+// Actualizar la cantidad de un producto en la lista y en el carrito
 function actualizarCantidad(id, cambio) {
     const producto = productos.find(p => p.id === id);
     if (!producto) return;
 
-    // Actualizo cantidad seleccionada (temporal)
-    const nuevaCantidad = cantidadesSeleccionadas[id] + cambio;
+    const itemEnCarrito = carrito.find(item => item.id === id);
+    let nuevaCantidad = (itemEnCarrito ? itemEnCarrito.cantidad : 0) + cambio;
 
-    // Valido que la cantidad no sea menor a 0 ni mayor al stock disponible. Hago render en HTML
-    if (nuevaCantidad >= 0 && nuevaCantidad <= producto.stock) {
-        cantidadesSeleccionadas[id] = nuevaCantidad;
-        document.getElementById(`cantidad-${id}`).textContent = nuevaCantidad;
-    }
-}
-
-// funcion para agregar al carrito efectivamente
-function agregarAlCarrito(id) {
-    const cantidad = cantidadesSeleccionadas[id];
-
-    const producto = productos.find(p => p.id === id);
-
-    // Si cantidad= 0, elimino el producto del carrito
-    if (cantidad === 0) {
-        carrito = carrito.filter(item => item.id !== id);
-        alert("Producto eliminado del carrito.");
-    } else {
-        const itemEnCarrito = carrito.find(item => item.id === id);
-        if (itemEnCarrito) {
-            itemEnCarrito.cantidad = cantidad; // Actualizar cantidad
+    // Validación de stock y cantidad mínima
+    if (nuevaCantidad > producto.stock) return;
+    if (nuevaCantidad < 1) {
+        if (confirm("¿Deseas eliminar este producto del carrito?")) {
+            eliminarDelCarrito(id);
+            return;
         } else {
-            carrito.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad });
+            return;
         }
     }
 
-    // Actualizo datos y vista
+    // Actualizar cantidad en la interfaz
+    document.getElementById(`cantidad-${id}`).textContent = nuevaCantidad;
+
+    // Agregar o actualizar el carrito
+    if (itemEnCarrito) {
+        itemEnCarrito.cantidad = nuevaCantidad;
+    } else {
+        carrito.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: nuevaCantidad });
+    }
+
+    guardarDatos();
+}
+
+// Guardar datos en LocalStorage
+function guardarDatos() {
+    localStorage.setItem("productos", JSON.stringify(productos));
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+}
+
+// Eliminar producto del carrito
+function eliminarDelCarrito(id) {
+    carrito = carrito.filter(item => item.id !== id);
     guardarDatos();
     renderizarProductos();
 }
 
-// Inicializo
-renderizarProductos();
-
+// Inicializar
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarProductos();
+});

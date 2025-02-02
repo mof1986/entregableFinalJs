@@ -39,6 +39,17 @@ footer {
     margin-bottom: 8px;
 }
 
+.card {
+    min-height: 500px; /* adapto tamaño tarjetas de visualizacion de productos */
+}
+
+.card-img-top {
+    width: 100%; 
+    height: auto; 
+    max-height: 200px;
+    object-fit: contain; 
+}
+
 /* Botones interactivos */
 button {
     cursor: pointer;

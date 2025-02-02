@@ -1,17 +1,17 @@
-// Productos (PENDIENTE: Pensar logica que cargue productos sin necesidad de ingresar 1ro a una seccion especifica)
+// Productos (PENDIENTE: Pensar lógica que cargue productos sin necesidad de ingresar 1ro a una sección específica)
 let productos = JSON.parse(localStorage.getItem("productos")) || [];
 
-// Guardo datos de PRODUCTOS en klocalStorage
+// Guardar datos de PRODUCTOS en localStorage
 function guardarDatos() {
     localStorage.setItem("productos", JSON.stringify(productos));
 }
 
-// fn que genera Id Unico para cada producto 
+// Función que genera Id único para cada producto 
 function generarIdUnico() {
     return productos.length > 0 ? Math.max(...productos.map(p => p.id)) + 1 : 1;
 }
 
-// Render lista de productos
+// Renderizar lista de productos
 function renderizarProductos() {
     const productList = document.querySelector("#product-list ul");
     productList.innerHTML = "";
@@ -28,6 +28,8 @@ function renderizarProductos() {
             <div>
                 <strong>${producto.nombre}</strong> - ${producto.descripcion} 
                 (Categoría: ${producto.categoria}, Precio: $${producto.precio}, Stock: ${producto.stock})
+                <br>
+                <img src="${producto.imagen}" alt="${producto.nombre}" style="width: 80px; height: auto; margin-top: 5px;">
             </div>
             <div>
                 <button class="btn btn-sm btn-warning me-2" onclick="editarProducto(${producto.id})">Editar</button>
@@ -38,17 +40,34 @@ function renderizarProductos() {
     });
 }
 
+// Previsualizar imagen antes de guardar
+document.querySelector("#product-image").addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById("image-preview").src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
 // Agregar/editar producto existente
-document.querySelector("#product-form").addEventListener("submit", () => {
+document.querySelector("#product-form").addEventListener("submit", (event) => {
+    event.preventDefault(); // Evita que la página se recargue al enviar el formulario
+
     const nombre = document.querySelector("#product-name").value;
     const descripcion = document.querySelector("#product-description").value;
     const precio = document.querySelector("#product-price").value;
     const stock = document.querySelector("#product-stock").value;
     const categoria = document.querySelector("#product-category").value;
+    const imagenInput = document.querySelector("#product-image"); // Obtener la imagen
+    let imagenURL = "../images/default.png"; // Imagen por defecto si no se selecciona una nueva
 
     const editId = document.querySelector("#product-form").dataset.edit;
+    
     if (editId) {
-        // Editar existente
+        // Editar producto existente
         const producto = productos.find(p => p.id === parseInt(editId));
         if (producto) {
             producto.nombre = nombre;
@@ -56,33 +75,48 @@ document.querySelector("#product-form").addEventListener("submit", () => {
             producto.precio = parseFloat(precio);
             producto.stock = parseInt(stock);
             producto.categoria = categoria;
+
+            // Si se selecciona una nueva imagen, la actualizamos. De lo contrario, mantenemos la anterior.
+            if (imagenInput.files.length > 0) {
+                const file = imagenInput.files[0];
+                producto.imagen = `../images/${file.name}`;
+            }
         }
         document.querySelector("#product-form").removeAttribute("data-edit");
     } else {
-        // Agrego nuevo producto con ID único
+        // Si es un producto nuevo, le asignamos una imagen si el usuario subió una
+        if (imagenInput.files.length > 0) {
+            const file = imagenInput.files[0];
+            imagenURL = `../images/${file.name}`;
+        }
+
+        // Agregar nuevo producto con ID único
         productos.push({
             id: generarIdUnico(),
             nombre,
             descripcion,
             precio: parseFloat(precio),
             stock: parseInt(stock),
-            categoria
+            categoria,
+            imagen: imagenURL // Se guarda la imagen asociada o la default
         });
     }
-//guardo, renderizo y limpio form
+
+    // Guardar, renderizar y limpiar formulario
     guardarDatos();
     renderizarProductos();
-    document.querySelector("#product-form").reset(); 
+    document.querySelector("#product-form").reset();
+    document.getElementById("image-preview").src = "../images/default.png"; // Restaurar imagen predeterminada
 });
 
-// Funcion para  elimnar producto
+// Función para eliminar producto
 function eliminarProducto(id) {
     productos = productos.filter(p => p.id !== id);
     guardarDatos();
     renderizarProductos();
 }
 
-// Edito producto
+// Editar producto
 function editarProducto(id) {
     const producto = productos.find(p => p.id === id);
     if (!producto) return;
@@ -92,8 +126,15 @@ function editarProducto(id) {
     document.querySelector("#product-price").value = producto.precio;
     document.querySelector("#product-stock").value = producto.stock;
     document.querySelector("#product-category").value = producto.categoria;
+    document.getElementById("image-preview").src = producto.imagen; // Mostrar imagen actual
     document.querySelector("#product-form").dataset.edit = id;
 }
 
-//Inicio con render
+// Botón para limpiar el formulario
+document.getElementById("clear-form").addEventListener("click", () => {
+    document.querySelector("#product-form").reset();
+    document.getElementById("image-preview").src = "../images/default.png"; // Restaurar imagen predeterminada
+});
+
+// Inicializar con render
 renderizarProductos();

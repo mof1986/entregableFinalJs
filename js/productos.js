@@ -96,26 +96,52 @@ function actualizarCantidad(id, cambio) {
 
     // Validación de stock y cantidad mínima
     if (nuevaCantidad > producto.stock) return;
+
     if (nuevaCantidad < 1) {
-        if (confirm("¿Deseas eliminar este producto del carrito?")) {
-            eliminarDelCarrito(id);
-            return;
-        } else {
-            return;
-        }
+        Swal.fire({
+            title: "¿Eliminar producto?",
+            text: "¿Deseas eliminar este producto del carrito?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                eliminarDelCarrito(id);
+            }
+        });
+    
+        return;
     }
+    
 
     // Actualizar cantidad en la interfaz
     document.getElementById(`cantidad-${id}`).textContent = nuevaCantidad;
 
-    // Agregar o actualizar el carrito
+    // Agregar o actualizar el carrito. 
     if (itemEnCarrito) {
         itemEnCarrito.cantidad = nuevaCantidad;
     } else {
         carrito.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: nuevaCantidad });
     }
-
+    
     guardarDatos();
+    
+    //Mensaje Toastify que indica la cantidad y el nombre del producto, abajo a la derecha con posibilidad de cierre, por X tiempo
+    Toastify({
+        text: `🛒 ${nuevaCantidad} x ${producto.nombre} agregado al carrito.`,
+        duration: 3000, // Dura este tiempo (ms)
+        gravity: "bottom", // Abajo
+        position: "right", // Derecha
+        close: true, // Se visualiza botón de cierre
+        style: {
+            background: "linear-gradient(to right, #00b09b, #96c93d)"
+        },
+    //    style.background: "linear-gradient(to right, #00b09b, #96c93d)",
+    }).showToast();
+
 }
 
 // Guardar datos en LocalStorage

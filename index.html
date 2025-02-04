@@ -32,14 +32,24 @@
     <main class="container my-5">
         <h1>Bienvenido al Simulador de Tienda</h1>
         <p>
-            Este es un simulador de tienda donde podrás explorar productos, gestionar tu carrito y administrar inventarios.
-            Usa el menú de navegación para acceder a las secciones disponibles o utiliza estos botones para accesos más rápidos (psst: tené en cuenta que también tenes el modo Administrador, a través del navbar -pendiente de introducir validacion de usr-).
+            Explora productos, gestiona tu carrito y administra inventarios desde el modo administrador. Usa el menú de navegación o los botones rápidos para acceder a cada sección. 
         </p>
-        <div class="text-center mt-4"> <!--Botones de BT https://getbootstrap.com/docs/4.1/components/buttons/-->
+        <p>Algunas de las principales features trabajadas:</p>
+        <ul>
+            <li> Solo se muestran productos con stock disponible.</li>
+            <li> Carga inicial de productos desde un archivo JSON, luego gestionados en Local Storage.</li>
+            <li> Soporte para imágenes en productos (guardadas en "./images/").</li>
+            <li> Modificación en tiempo real del carrito con botones "+" y "-".</li>
+            <li> Confirmación al eliminar productos o limpiar el carrito.</li>
+            <li> En modo administrador, los cambios afectan el Local Storage pero no el JSON original.</li>
+            <li> Se utiliza aviso de Toastify y SweetAlert al hacer ABM de los productos, limpieza de formularios y/o en modo administrador.</li>
+        </ul>
+        <div class="text-center mt-4">
             <a href="./pages/productos.html" class="btn btn-info btn-lg mx-2">Productos</a>
             <a href="./pages/carrito.html" class="btn btn-info btn-lg mx-2">Carrito</a>
         </div>
     </main>
+    
 
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3">

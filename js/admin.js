@@ -1,4 +1,4 @@
-// Productos (PENDIENTE: Pensar lógica que cargue productos sin necesidad de ingresar 1ro a una sección específica)
+// Productos (PENDIENTE: Pensar lógica que cargue productos sin necesidad de ingresar 1ro a una sección específica, en este caso productos.html)
 let productos = JSON.parse(localStorage.getItem("productos")) || [];
 
 // Guardar datos de PRODUCTOS en localStorage
@@ -109,11 +109,34 @@ document.querySelector("#product-form").addEventListener("submit", (event) => {
     document.getElementById("image-preview").src = "../images/default.png"; // Restaurar imagen predeterminada
 });
 
-// Función para eliminar producto
+// Función para eliminar producto con confirmación de SweetAlert2
 function eliminarProducto(id) {
-    productos = productos.filter(p => p.id !== id);
-    guardarDatos();
-    renderizarProductos();
+    const producto = productos.find(p => p.id === id);
+    if (!producto) return;
+
+    Swal.fire({
+        title: "¿Estás seguro?",
+        text: `Vas a eliminar "${producto.nombre}". Esta acción no se puede deshacer.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            productos = productos.filter(p => p.id !== id);
+            guardarDatos();
+            renderizarProductos();
+
+            Swal.fire({
+                title: "Eliminado",
+                text: "El producto ha sido eliminado correctamente.",
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+    });
 }
 
 // Editar producto
@@ -130,10 +153,30 @@ function editarProducto(id) {
     document.querySelector("#product-form").dataset.edit = id;
 }
 
-// Botón para limpiar el formulario
+// Botón para limpiar el formulario con confirmación de SweetAlert2
 document.getElementById("clear-form").addEventListener("click", () => {
-    document.querySelector("#product-form").reset();
-    document.getElementById("image-preview").src = "../images/default.png"; // Restaurar imagen predeterminada
+    Swal.fire({
+        title: "¿Limpiar formulario?",
+        text: "Se perderán los cambios no guardados.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, limpiar",
+        cancelButtonText: "Cancelar",
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.querySelector("#product-form").reset();
+            document.getElementById("image-preview").src = "../images/default.png"; // Restaurar imagen predeterminada
+
+            Swal.fire({
+                title: "Formulario limpio",
+                text: "El formulario ha sido limpiado.",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+    });
 });
 
 // Inicializar con render

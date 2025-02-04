@@ -32,7 +32,7 @@ function renderizarCarrito() {
 
         // Buscamos el producto en la lista original para obtener su imagen
         const producto = productos.find(p => p.id === item.id);
-        const imagenURL = producto && producto.imagen ? producto.imagen : "../images/default.png"; // Si no hay imagen, usa una por defecto
+        const imagenURL = producto && producto.imagen ? producto.imagen : "../images/default.png"; // Imagen por defecto si no hay
 
         // Mostramos productos del carrito con imagen y botones para modificar cantidad
         carritoList.innerHTML += `
@@ -74,12 +74,21 @@ function actualizarCantidadCarrito(id, cambio) {
     // Validar stock y cantidad mínima
     if (nuevaCantidad > producto.stock) return;
     if (nuevaCantidad < 1) {
-        if (confirm("¿Deseas eliminar este producto del carrito?")) {
-            eliminarDelCarrito(id);
-            return;
-        } else {
-            return;
-        }
+        Swal.fire({
+            title: "¿Eliminar producto?",
+            text: "¿Deseas eliminar este producto del carrito?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                eliminarDelCarrito(id);
+            }
+        });
+        return;
     }
 
     item.cantidad = nuevaCantidad;
@@ -90,9 +99,20 @@ function actualizarCantidadCarrito(id, cambio) {
 
 // Función para confirmar eliminación de un producto
 function confirmarEliminarProducto(id) {
-    if (confirm("¿Estás seguro de que deseas eliminar este producto del carrito?")) {
-        eliminarDelCarrito(id);
-    }
+    Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Este producto será eliminado del carrito.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            eliminarDelCarrito(id);
+        }
+    });
 }
 
 // Función para eliminar un producto del carrito
@@ -113,9 +133,20 @@ function eliminarDelCarrito(id) {
 
 // Función para confirmar limpieza del carrito
 function confirmarLimpiarCarrito() {
-    if (confirm("¿Estás seguro de que deseas vaciar el carrito? Esta acción no se puede deshacer.")) {
-        limpiarCarrito();
-    }
+    Swal.fire({
+        title: "¿Vaciar carrito?",
+        text: "Esta acción eliminará todos los productos del carrito.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, vaciar",
+        cancelButtonText: "Cancelar"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            limpiarCarrito();
+        }
+    });
 }
 
 // Función para limpiar el carrito
@@ -133,7 +164,13 @@ function limpiarCarrito() {
 
 // Simular pago
 function pagar() {
-    alert("La funcionalidad de pago aún no está implementada.");
+    Swal.fire({
+        title: "Funcionalidad no disponible",
+        text: "La funcionalidad de pago aún no está implementada.",
+        icon: "info",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Entendido"
+    });
 }
 
 // Inicializar renderizado del carrito

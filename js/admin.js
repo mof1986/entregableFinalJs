@@ -6,7 +6,7 @@ function guardarDatos() {
     localStorage.setItem("productos", JSON.stringify(productos));
 }
 
-// Función que genera Id único para cada producto 
+// Función que genera Id Único para cada producto 
 function generarIdUnico() {
     return productos.length > 0 ? Math.max(...productos.map(p => p.id)) + 1 : 1;
 }
@@ -52,7 +52,7 @@ document.querySelector("#product-image").addEventListener("change", function (ev
     }
 });
 
-// Agregar/editar producto existente
+// Agregar/editar producto existente con confirmación previa en SweetAlert2
 document.querySelector("#product-form").addEventListener("submit", (event) => {
     event.preventDefault(); // Evita que la página se recargue al enviar el formulario
 
@@ -65,48 +65,78 @@ document.querySelector("#product-form").addEventListener("submit", (event) => {
     let imagenURL = "../images/default.png"; // Imagen por defecto si no se selecciona una nueva
 
     const editId = document.querySelector("#product-form").dataset.edit;
-    
-    if (editId) {
-        // Editar producto existente
-        const producto = productos.find(p => p.id === parseInt(editId));
-        if (producto) {
-            producto.nombre = nombre;
-            producto.descripcion = descripcion;
-            producto.precio = parseFloat(precio);
-            producto.stock = parseInt(stock);
-            producto.categoria = categoria;
+    let mensajeConfirmacion = editId ? "¿Deseas confirmar los cambios en este producto?" : "¿Deseas agregar este nuevo producto?";
 
-            // Si se selecciona una nueva imagen, la actualizamos. De lo contrario, mantenemos la anterior.
-            if (imagenInput.files.length > 0) {
-                const file = imagenInput.files[0];
-                producto.imagen = `../images/${file.name}`;
+    // Mostrar confirmación antes de guardar
+    Swal.fire({
+        title: "¿Estás seguro?",
+        text: mensajeConfirmacion,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, guardar",
+        cancelButtonText: "Cancelar",
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let mensajeFinal = "";
+
+            if (editId) {
+                // Editar producto existente
+                const producto = productos.find(p => p.id === parseInt(editId));
+                if (producto) {
+                    producto.nombre = nombre;
+                    producto.descripcion = descripcion;
+                    producto.precio = parseFloat(precio);
+                    producto.stock = parseInt(stock);
+                    producto.categoria = categoria;
+
+                    // Si se selecciona una nueva imagen, la actualizamos. De lo contrario, mantenemos la anterior.
+                    if (imagenInput.files.length > 0) {
+                        const file = imagenInput.files[0];
+                        producto.imagen = `../images/${file.name}`;
+                    }
+
+                    mensajeFinal = `El producto "${producto.nombre}" ha sido actualizado correctamente.`;
+                }
+                document.querySelector("#product-form").removeAttribute("data-edit");
+            } else {
+                // Si es un producto nuevo, le asignamos una imagen si el usuario subió una
+                if (imagenInput.files.length > 0) {
+                    const file = imagenInput.files[0];
+                    imagenURL = `../images/${file.name}`;
+                }
+
+                // Agregar nuevo producto con ID único
+                const nuevoProducto = {
+                    id: generarIdUnico(),
+                    nombre,
+                    descripcion,
+                    precio: parseFloat(precio),
+                    stock: parseInt(stock),
+                    categoria,
+                    imagen: imagenURL // Se guarda la imagen asociada o la default
+                };
+
+                productos.push(nuevoProducto);
+                mensajeFinal = `El producto "${nuevoProducto.nombre}" ha sido agregado correctamente.`;
             }
-        }
-        document.querySelector("#product-form").removeAttribute("data-edit");
-    } else {
-        // Si es un producto nuevo, le asignamos una imagen si el usuario subió una
-        if (imagenInput.files.length > 0) {
-            const file = imagenInput.files[0];
-            imagenURL = `../images/${file.name}`;
-        }
 
-        // Agregar nuevo producto con ID único
-        productos.push({
-            id: generarIdUnico(),
-            nombre,
-            descripcion,
-            precio: parseFloat(precio),
-            stock: parseInt(stock),
-            categoria,
-            imagen: imagenURL // Se guarda la imagen asociada o la default
-        });
-    }
+            // Guardar, renderizar y limpiar formulario
+            guardarDatos();
+            renderizarProductos();
+            document.querySelector("#product-form").reset();
+            document.getElementById("image-preview").src = "../images/default.png"; // Restaurar imagen predeterminada
 
-    // Guardar, renderizar y limpiar formulario
-    guardarDatos();
-    renderizarProductos();
-    document.querySelector("#product-form").reset();
-    document.getElementById("image-preview").src = "../images/default.png"; // Restaurar imagen predeterminada
+            // Mostrar mensaje de éxito
+            Swal.fire({
+                title: "Producto guardado",
+                text: mensajeFinal,
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+    });
 });
 
 // Función para eliminar producto con confirmación de SweetAlert2

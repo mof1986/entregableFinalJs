@@ -69,7 +69,7 @@ document.querySelector("#product-form").addEventListener("submit", (event) => {
 
     // Mostrar confirmación antes de guardar
     Swal.fire({
-        title: "¿Estás seguro?",
+        title: "¿Estás seguro?git",
         text: mensajeConfirmacion,
         icon: "question",
         showCancelButton: true,

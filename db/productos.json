@@ -18,6 +18,5 @@
     { "id": 17, "nombre": "Cinta Métrica", "descripcion": "5 metros con bloqueo", "precio": 700, "stock": 20, "categoria": "Herramientas", "imagen": "../images/cinta-metrica.jpeg" },
     { "id": 18, "nombre": "Taladro Eléctrico", "descripcion": "Potencia 500W con 13 brocas", "precio": 25000, "stock": 3, "categoria": "Herramientas", "imagen": "../images/taladro.jpeg" },
     { "id": 19, "nombre": "Nivel Láser", "descripcion": "Rango de 20m con trípode", "precio": 18000, "stock": 4, "categoria": "Herramientas", "imagen": "../images/nivel-laser.jpeg" },
-    { "id": 20, "nombre": "Martillo de Goma", "descripcion": "Cabeza de goma 500g", "precio": 1500, "stock": 15, "categoria": "Herramientas", "imagen": "../images/martillo-goma.jpeg" },
-    { "id": 21, "nombre": "Lorena", "descripcion": "Prueba de agregado en json. No se admiten devoluciones", "precio": 3500, "stock": 1, "categoria": "cabezas duras", "imagen": "../images/lorena.jpeg" }
+    { "id": 20, "nombre": "Martillo de Goma", "descripcion": "Cabeza de goma 500g", "precio": 1500, "stock": 15, "categoria": "Herramientas", "imagen": "../images/martillo-goma.jpeg" }
 ]

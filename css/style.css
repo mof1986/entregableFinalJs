@@ -43,6 +43,18 @@ footer {
     min-height: 500px; /* adapto tamaño tarjetas de visualizacion de productos */
 }
 
+/* carrito flotante */
+.fixed-cart {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+.fixed-cart .btn {
+    font-size: 18px;
+    padding: 10px 20px;
+}
+
 .card-img-top {
     width: 100%; 
     height: auto; 
